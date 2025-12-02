@@ -1,6 +1,6 @@
 /*
  * Replace the following string of 0s with your student number
- * 000000000
+ * 240242385
  */
 #include "ipc_jobqueue.h"
 
@@ -20,74 +20,113 @@ ipc_jobqueue_t* ipc_jobqueue_new(proc_t* proc) {
 }
 
 /* 
- * TODO: you must implement this function.
- * Hints:
- * - this is a wrapper for jobqueue function jobqueue_dequeue
- * - and remember you must call do_critical_work
+ * Wrapper for pri_jobqueue_dequeue with critical work simulation.
  */
 job_t* ipc_jobqueue_dequeue(ipc_jobqueue_t* ijq, job_t* dst) {
-    return NULL;
+    if (!ijq) {
+        return NULL;
+    }
+    
+    /* Inject critical work delay for simulation */
+    do_critical_work(ijq->proc);
+    
+    /* Call pri_jobqueue function on shared memory queue */
+    return pri_jobqueue_dequeue((pri_jobqueue_t*) ijq->addr, dst);
 }
 
 /* 
- * TODO: you must implement this function.
- * Hint:
- * - see ipc_jobqueue_dequeue hint
+ * Wrapper for pri_jobqueue_enqueue with critical work simulation.
  */
 void ipc_jobqueue_enqueue(ipc_jobqueue_t* ijq, job_t* job) {
-    return;
+    if (!ijq) {
+        return;
+    }
+    
+    /* Inject critical work delay for simulation */
+    do_critical_work(ijq->proc);
+    
+    /* Call pri_jobqueue function on shared memory queue */
+    pri_jobqueue_enqueue((pri_jobqueue_t*) ijq->addr, job);
 }
     
 /* 
- * TODO: you must implement this function.
- * Hint:
- * - see ipc_jobqueue_dequeue hint
+ * Wrapper for pri_jobqueue_is_empty with critical work simulation.
  */
 bool ipc_jobqueue_is_empty(ipc_jobqueue_t* ijq) {
-    return true;
+    if (!ijq) {
+        return true;
+    }
+    
+    /* Inject critical work delay for simulation */
+    do_critical_work(ijq->proc);
+    
+    /* Call pri_jobqueue function on shared memory queue */
+    return pri_jobqueue_is_empty((pri_jobqueue_t*) ijq->addr);
 }
 
 /* 
- * TODO: you must implement this function.
- * Hint:
- * - see ipc_jobqueue_dequeue hint
+ * Wrapper for pri_jobqueue_is_full with critical work simulation.
  */
 bool ipc_jobqueue_is_full(ipc_jobqueue_t* ijq) {
-    return true;
+    if (!ijq) {
+        return true;
+    }
+    
+    /* Inject critical work delay for simulation */
+    do_critical_work(ijq->proc);
+    
+    /* Call pri_jobqueue function on shared memory queue */
+    return pri_jobqueue_is_full((pri_jobqueue_t*) ijq->addr);
 }
 
 /* 
- * TODO: you must implement this function.
- * Hint:
- * - see ipc_jobqueue_dequeue hint
+ * Wrapper for pri_jobqueue_peek with critical work simulation.
  */
 job_t* ipc_jobqueue_peek(ipc_jobqueue_t* ijq, job_t* dst) {
-    return NULL;
+    if (!ijq) {
+        return NULL;
+    }
+    
+    /* Inject critical work delay for simulation */
+    do_critical_work(ijq->proc);
+    
+    /* Call pri_jobqueue function on shared memory queue */
+    return pri_jobqueue_peek((pri_jobqueue_t*) ijq->addr, dst);
 }
 
 /* 
- * TODO: you must implement this function.
- * Hint:
- * - see ipc_jobqueue_dequeue hint
+ * Wrapper for pri_jobqueue_size with critical work simulation.
  */
 int ipc_jobqueue_size(ipc_jobqueue_t* ijq) {
-    return 0;
+    if (!ijq) {
+        return 0;
+    }
+    
+    /* Inject critical work delay for simulation */
+    do_critical_work(ijq->proc);
+    
+    /* Call pri_jobqueue function on shared memory queue */
+    return pri_jobqueue_size((pri_jobqueue_t*) ijq->addr);
 }
 
 /* 
- * TODO: you must implement this function.
- * Hint:
- * - see ipc_jobqueue_dequeue hint
+ * Wrapper for pri_jobqueue_space with critical work simulation.
  */
 int ipc_jobqueue_space(ipc_jobqueue_t* ijq) {
-    return 0;
+    if (!ijq) {
+        return 0;
+    }
+    
+    /* Inject critical work delay for simulation */
+    do_critical_work(ijq->proc);
+    
+    /* Call pri_jobqueue function on shared memory queue */
+    return pri_jobqueue_space((pri_jobqueue_t*) ijq->addr);
 }
 
 /* 
- * TODO: you must implement this function.
- * Hint:
- * - look at how the ipc_jobqueue is allocated in ipc_jobqueue_new
+ * Delete ipc_jobqueue. Calls ipc_delete to clean up shared memory.
  */
 void ipc_jobqueue_delete(ipc_jobqueue_t* ijq) {
-    return;
+    ipc_delete(ijq);
 }

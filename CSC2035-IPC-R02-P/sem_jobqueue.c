@@ -1,6 +1,6 @@
 /*
  * Replace the following string of 0s with your student number
- * 000000000
+ * 240242385
  */
 #include <fcntl.h>          /* For O_* constants */
 #include <sys/stat.h>       /* For mode constants */
@@ -110,68 +110,197 @@ sem_jobqueue_t* sem_jobqueue_new(proc_t* proc) {
 }
 
 /* 
- * TODO: you must implement this function according to the specification in
- * sem_jobqueue.h
+ * Dequeue with semaphore protection (Monitor pattern).
+ * Wait for full (item available), acquire mutex, dequeue, release mutex, signal empty.
  */
 job_t* sem_jobqueue_dequeue(sem_jobqueue_t* sjq, job_t* dst) {
-    return NULL;
+    if (!sjq) {
+        return NULL;
+    }
+    
+    /* Wait for queue to have at least one item */
+    if (sem_wait(sjq->full) != 0) {
+        return NULL;
+    }
+    
+    /* Acquire mutex for exclusive access */
+    if (sem_wait(sjq->mutex) != 0) {
+        return NULL;
+    }
+    
+    /* Perform dequeue operation */
+    job_t* result = ipc_jobqueue_dequeue(sjq->ijq, dst);
+    
+    /* Release mutex */
+    sem_post(sjq->mutex);
+    
+    /* Signal that queue has one more empty slot */
+    sem_post(sjq->empty);
+    
+    return result;
 }
 
 /* 
- * TODO: you must implement this function according to the specification in
- * sem_jobqueue.h
+ * Enqueue with semaphore protection (Monitor pattern).
+ * Wait for empty (space available), acquire mutex, enqueue, release mutex, signal full.
  */
 void sem_jobqueue_enqueue(sem_jobqueue_t* sjq, job_t* job) {
-    return;
+    if (!sjq) {
+        return;
+    }
+    
+    /* Wait for queue to have at least one empty slot */
+    if (sem_wait(sjq->empty) != 0) {
+        return;
+    }
+    
+    /* Acquire mutex for exclusive access */
+    if (sem_wait(sjq->mutex) != 0) {
+        return;
+    }
+    
+    /* Perform enqueue operation */
+    ipc_jobqueue_enqueue(sjq->ijq, job);
+    
+    /* Release mutex */
+    sem_post(sjq->mutex);
+    
+    /* Signal that queue has one more item */
+    sem_post(sjq->full);
 }
 
 /* 
- * TODO: you must implement this function according to the specification in
- * sem_jobqueue.h
+ * Check if queue is empty with mutex protection.
  */
 bool sem_jobqueue_is_empty(sem_jobqueue_t* sjq) {
-    return true;
+    if (!sjq) {
+        return true;
+    }
+    
+    /* Acquire mutex for reading queue state */
+    if (sem_wait(sjq->mutex) != 0) {
+        return true;
+    }
+    
+    bool result = ipc_jobqueue_is_empty(sjq->ijq);
+    
+    /* Release mutex */
+    sem_post(sjq->mutex);
+    
+    return result;
 }
 
 /* 
- * TODO: you must implement this function according to the specification in
- * sem_jobqueue.h
+ * Check if queue is full with mutex protection.
  */
 bool sem_jobqueue_is_full(sem_jobqueue_t* sjq) {
-    return true;
+    if (!sjq) {
+        return true;
+    }
+    
+    /* Acquire mutex for reading queue state */
+    if (sem_wait(sjq->mutex) != 0) {
+        return true;
+    }
+    
+    bool result = ipc_jobqueue_is_full(sjq->ijq);
+    
+    /* Release mutex */
+    sem_post(sjq->mutex);
+    
+    return result;
 }
 
 /* 
- * TODO: you must implement this function according to the specification in
- * sem_jobqueue.h
+ * Peek at highest priority job with mutex protection.
  */
 job_t* sem_jobqueue_peek(sem_jobqueue_t* sjq, job_t* dst) {
-    return NULL;
+    if (!sjq) {
+        return NULL;
+    }
+    
+    /* Acquire mutex for reading queue */
+    if (sem_wait(sjq->mutex) != 0) {
+        return NULL;
+    }
+    
+    job_t* result = ipc_jobqueue_peek(sjq->ijq, dst);
+    
+    /* Release mutex */
+    sem_post(sjq->mutex);
+    
+    return result;
 }
 
 /* 
- * TODO: you must implement this function according to the specification in
- * sem_jobqueue.h
+ * Get queue size with mutex protection.
  */
 int sem_jobqueue_size(sem_jobqueue_t* sjq) {
-    return 0;
+    if (!sjq) {
+        return -1;
+    }
+    
+    /* Acquire mutex for reading queue state */
+    if (sem_wait(sjq->mutex) != 0) {
+        return -1;
+    }
+    
+    int result = ipc_jobqueue_size(sjq->ijq);
+    
+    /* Release mutex */
+    sem_post(sjq->mutex);
+    
+    return result;
 }
 
 /* 
- * TODO: you must implement this function according to the specification in
- * sem_jobqueue.h
+ * Get queue available space with mutex protection.
  */
 int sem_jobqueue_space(sem_jobqueue_t* sjq) {
-    return 0;
+    if (!sjq) {
+        return -1;
+    }
+    
+    /* Acquire mutex for reading queue state */
+    if (sem_wait(sjq->mutex) != 0) {
+        return -1;
+    }
+    
+    int result = ipc_jobqueue_space(sjq->ijq);
+    
+    /* Release mutex */
+    sem_post(sjq->mutex);
+    
+    return result;
 }
 
 /* 
- * TODO: you must implement this function according to the specification in
- * sem_jobqueue.h
- * Hint:
- * - look at what is allocated and/or opened in sem_jobqueue_new and in what 
- *      order
+ * Delete sem_jobqueue. Close semaphores, delete ipc_jobqueue, free sjq.
+ * Reverses order of allocation in sem_jobqueue_new.
  */
 void sem_jobqueue_delete(sem_jobqueue_t* sjq) {
-    return;
+    if (!sjq) {
+        return;
+    }
+    
+    /* Close and unlink semaphores in reverse order of creation */
+    if (sjq->empty) {
+        sem_delete(sjq->empty, sem_empty_label);
+    }
+    
+    if (sjq->full) {
+        sem_delete(sjq->full, sem_full_label);
+    }
+    
+    if (sjq->mutex) {
+        sem_delete(sjq->mutex, sem_mutex_label);
+    }
+    
+    /* Delete underlying ipc_jobqueue */
+    if (sjq->ijq) {
+        ipc_jobqueue_delete(sjq->ijq);
+    }
+    
+    /* Free the sem_jobqueue struct itself */
+    free(sjq);
 }
