@@ -66,11 +66,11 @@ job_t* pri_jobqueue_dequeue(pri_jobqueue_t* pjq, job_t* dst) {
     
     /* Copy the job to dst or allocate new */
     job_t* result = job_copy(&pjq->jobs[best_idx], dst);
-    
+
     /* Mark slot as empty (init sets priority to 0) and decrement size */
     job_init(&pjq->jobs[best_idx]);
     pjq->size--;
-    
+
     return result;
 }
 

@@ -25,27 +25,17 @@ job_t* job_copy(job_t* src, job_t* dst) {
 }
 
 void job_init(job_t* job) {
-    if (job == NULL) {
-        return;
-    }
-
+    if (job == NULL) {return;}
     job->pid = 0;
     job->id = 0;
     job->priority = 0;
-
-    for (size_t i = 0; i < MAX_NAME_SIZE - 1; i++) {
-        job->label[i] = '*';
-    }
+    for (size_t i = 0; i < MAX_NAME_SIZE - 1; i++) {job->label[i] = '*';}
     job->label[MAX_NAME_SIZE - 1] = '\0';
 }
 
 bool job_is_equal(job_t* j1, job_t* j2) {
-    if (j1 == NULL && j2 == NULL) {
-        return true;
-    }
-    if (j1 == NULL || j2 == NULL) {
-        return false;
-    }
+    if (j1 == NULL && j2 == NULL) {return true;}
+    if (j1 == NULL || j2 == NULL) {return false;}
 
     if (j1->pid != j2->pid) return false;
     if (j1->id != j2->id) return false;
@@ -65,74 +55,53 @@ job_t* job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
 
     size_t i = 0;
     if (label != NULL && label[0] != '\0') {
-        for (i = 0; i < MAX_NAME_SIZE - 1 && label[i] != '\0'; i++) {
-            job->label[i] = label[i];
-        }
+        for (i = 0; i < MAX_NAME_SIZE - 1 && label[i] != '\0'; i++)
+            {job->label[i] = label[i];}
     }
 
-    for (; i < MAX_NAME_SIZE - 1; i++) {
-        job->label[i] = '*';
-    }
+    for (; i < MAX_NAME_SIZE - 1; i++) {job->label[i] = '*';}
     job->label[MAX_NAME_SIZE - 1] = '\0';
     return job;
 }
 
 char* job_to_str(job_t* job, char* str) {
     char* out;
-    if(job == NULL){
-        return NULL;
-    }
-
-    if (strlen(job->label) != MAX_NAME_SIZE - 1) {
-        return NULL;
-    }
+    if(job == NULL){return NULL;}
+    if (strlen(job->label) != MAX_NAME_SIZE - 1) {return NULL;}
 
     if (str == NULL) {
         out = malloc(JOB_STR_SIZE);
-        if (out == NULL) {
-            return NULL;
-        }
-    } else {
-        out = str;
-    }
+        if (out == NULL) {return NULL;}
+    } else {out = str;}
 
     int written = snprintf(out, JOB_STR_SIZE, JOB_STR_FMT,job->pid, job->id, job->priority, job->label);
 
     if (written < 0 || written >= JOB_STR_SIZE) {
-        if (str == NULL) {
-            free(out);
-        }
+        if (str == NULL) {free(out);}
         return NULL;
     }
     return out;
 }
 
 job_t* str_to_job(char* str, job_t* job) {
-    if (str == NULL) {
-        return NULL;
-    }
+    if (str == NULL) {return NULL;}
+    if (strlen(str) != JOB_STR_SIZE - 1) {return NULL;}
 
     int pid_tmp;
     unsigned int id_tmp;
     unsigned int priority_tmp;
     char label_buf[MAX_NAME_SIZE];
 
-    int scanned = sscanf(str, JOB_STR_FMT, &pid_tmp, &id_tmp, &priority_tmp, label_buf);
+//
+    int scanned = sscanf(str, JOB_STR_FMT,&pid_tmp, &id_tmp, &priority_tmp, label_buf);
+    if (scanned != 4) {return NULL;}
 
-    if (scanned != 4) {
-        return NULL;
-    }
-    if (strlen(label_buf) != MAX_NAME_SIZE - 1) {
-        return NULL;
-    }
+    if (strlen(label_buf) != MAX_NAME_SIZE - 1) {return NULL;}
+
     if (job == NULL) {
-        return job_new((pid_t)pid_tmp, id_tmp, priority_tmp, label_buf);
+        job_t* new_job = job_new((pid_t)pid_tmp, id_tmp, priority_tmp, label_buf);
+        return new_job;
     }
-    return job_set(job, (pid_t)pid_tmp, id_tmp, priority_tmp, label_buf);
-}
 
-void job_delete(job_t* job) {
-    if (job != NULL) {
-        free(job);
-    }
+    return job_set(job, (pid_t)pid_tmp, id_tmp, priority_tmp, label_buf);
 }
