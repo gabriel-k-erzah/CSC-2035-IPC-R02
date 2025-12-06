@@ -105,3 +105,7 @@ job_t* str_to_job(char* str, job_t* job) {
 
     return job_set(job, (pid_t)pid_tmp, id_tmp, priority_tmp, label_buf);
 }
+
+void job_delete(job_t* job) {
+    if (job != NULL) {free(job);}
+}
