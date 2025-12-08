@@ -237,12 +237,12 @@ job_t* sem_jobqueue_peek(sem_jobqueue_t* sjq, job_t* dst) {
  */
 int sem_jobqueue_size(sem_jobqueue_t* sjq) {
     if (!sjq) {
-        return -1;
+        return 0;
     }
     
     /* Acquire mutex for reading queue state */
     if (sem_wait(sjq->mutex) != 0) {
-        return -1;
+        return 0;
     }
     
     int result = ipc_jobqueue_size(sjq->ijq);
@@ -258,12 +258,12 @@ int sem_jobqueue_size(sem_jobqueue_t* sjq) {
  */
 int sem_jobqueue_space(sem_jobqueue_t* sjq) {
     if (!sjq) {
-        return -1;
+        return 0;
     }
     
     /* Acquire mutex for reading queue state */
     if (sem_wait(sjq->mutex) != 0) {
-        return -1;
+        return 0;
     }
     
     int result = ipc_jobqueue_space(sjq->ijq);
